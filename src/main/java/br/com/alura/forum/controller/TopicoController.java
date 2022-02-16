@@ -7,8 +7,10 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import br.com.alura.forum.controller.dto.TopicoDTO;
+import br.com.alura.forum.controller.dto.TopicoDTODetalhado;
 import br.com.alura.forum.controller.form.TopicoForm;
 import br.com.alura.forum.modelo.Curso;
 import br.com.alura.forum.modelo.Topico;
@@ -76,5 +79,12 @@ public class TopicoController {
 		topicoRepository.save(topico);		
 		URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
 		return ResponseEntity.created(uri).body(new TopicoDTO(topico));
+	}
+	
+	
+	@GetMapping("/{id}")
+	public TopicoDTODetalhado detalhar(@PathVariable Long id) {
+		Topico topico = topicoRepository.getById(id);
+		return new TopicoDTODetalhado(topico);
 	}
 }
