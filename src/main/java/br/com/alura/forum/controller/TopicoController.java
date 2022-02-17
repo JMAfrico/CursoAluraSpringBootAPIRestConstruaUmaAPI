@@ -1,15 +1,15 @@
 package br.com.alura.forum.controller;
 
 import java.net.URI;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +23,6 @@ import br.com.alura.forum.controller.dto.TopicoDTO;
 import br.com.alura.forum.controller.dto.TopicoDTODetalhado;
 import br.com.alura.forum.controller.form.TopicoForm;
 import br.com.alura.forum.controller.form.TopicoFormAtualizar;
-import br.com.alura.forum.modelo.Curso;
 import br.com.alura.forum.modelo.Topico;
 import br.com.alura.forum.repository.CursoRepository;
 import br.com.alura.forum.repository.TopicoRepository;
@@ -38,27 +37,6 @@ public class TopicoController {
 	@Autowired
 	private CursoRepository cursoRepository;
 
-//	@RequestMapping("/topicos")
-//	public List<TopicoDTO> lista() {
-//		Curso java = new Curso("java", "back end");
-//		Topico t1 = new Topico("Dúvida exception", "Erro na hora de executar o main", java);
-//		
-//		Curso c = new Curso("c", "back end");
-//		Topico t2 = new Topico("Mensagem no terminal", "Não aparece a mensagem", c);
-//		
-//		Curso ruby = new Curso("ruby", "automação");
-//		Topico t3 = new Topico("Dúvida assert", "Erro na hora chamar o assert", ruby);
-//		
-//		return TopicoDTO.converter(Arrays.asList(t1,t2,t3));
-//	}
-
-//	@RequestMapping("/topicos")
-//	public List<TopicoDTO> lista() {	
-//		List<Topico> topicos = topicoRepository.findAll();
-//		return TopicoDTO.converter(topicos);
-//	}
-
-	
 	@GetMapping
 	public List<TopicoDTO> lista(String nomeCurso) {
 		if (nomeCurso == null) {
@@ -70,13 +48,8 @@ public class TopicoController {
 		}
 	}
 	
-//	@PostMapping
-//	public void cadastrar(@RequestBody TopicoForm form) {
-//		Topico topico = form.converter(cursoRepository);
-//		topicoRepository.save(topico);
-//	}
-	
 	@PostMapping
+	@Transactional
 	public ResponseEntity<TopicoDTO> cadastrar(@RequestBody @Valid TopicoForm form, UriComponentsBuilder uriBuilder) {
 		Topico topico = form.converter(cursoRepository);
 		topicoRepository.save(topico);		
@@ -86,23 +59,29 @@ public class TopicoController {
 	
 	
 	@GetMapping("/{id}")
-	public TopicoDTODetalhado detalhar(@PathVariable Long id) {
-		Topico topico = topicoRepository.getById(id);
-		return new TopicoDTODetalhado(topico);
+	public ResponseEntity<TopicoDTODetalhado> detalhar(@PathVariable Long id) {
+		Optional<Topico> topico = topicoRepository.findById(id);
+		if(topico.isPresent()) {
+			return ResponseEntity.ok(new TopicoDTODetalhado(topico.get()));
+		}		
+		return ResponseEntity.notFound().build();
 	}
 	
-	@PutMapping("/{id}")
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<TopicoDTO> atualizar(@PathVariable Long id, @RequestBody @Valid TopicoFormAtualizar form) {
+        Optional<Topico> topico = topicoRepository.findById(id);
+        if(topico.isPresent()) {
+            form.atualizar(topico.get());
+            return ResponseEntity.ok(new TopicoDTO(topico.get()));
+        }
+        return ResponseEntity.notFound().build();                
+    }
+	
+	@DeleteMapping("/{id}")
 	@Transactional
-	public ResponseEntity<TopicoDTO> atualizar(@PathVariable Long id, @RequestBody @Valid TopicoFormAtualizar form){
-		Topico topico = form.atualizar(id, topicoRepository);
-		return ResponseEntity.ok(new TopicoDTO(topico));
+	public ResponseEntity<?> remover(@PathVariable Long id){
+		topicoRepository.deleteById(id);
+		return ResponseEntity.ok().build();
 	}
-	
-	//testeDeGITTTTTTTT
-	
-	//testedeGit 222222
-	
-	//testedeGit 3333
-	
-	//testedeGit 4444
 }
